@@ -1,0 +1,54 @@
+# ehall 成绩监控配置模板
+# 复制本文件为 config.yaml 后填写真实值。config.yaml 已被 .gitignore 忽略，切勿提交。
+
+# ============ 接口配置 ============
+# 默认值适用于南京大学。其他金智教育 EMAP 框架高校请按 F12 抓包替换。
+api:
+  # 成绩数据接口（注意是 .../modules/cjcx/cjcx.do 这一层，不是上一层的模块元数据接口 .../modules/cjcx.do）
+  api_url: "https://ehallapp.nju.edu.cn/jwapp/sys/cjcx/modules/cjcx/cjcx.do"
+  # 预热首页，用于建立会话；Referer 也用它
+  warmup_url: "https://ehallapp.nju.edu.cn/jwapp/sys/cjcx/*default/index.do"
+  # 写入 Cookie 时使用的域名
+  cookie_domain: "ehallapp.nju.edu.cn"
+  # F12 -> 网络 -> 选中 cjcx.do 请求 -> 负载 -> 查看源代码，原样复制（含学年学期过滤，换学期需更新）
+  raw_payload: '*json=1&querySetting=%5B%7B%22name%22%3A%22SHOWMAXCJ%22%2C%22caption%22%3A%22%E6%98%BE%E7%A4%BA%E6%9C%80%E9%AB%98%E6%88%90%E7%BB%A9%22%2C%22linkOpt%22%3A%22AND%22%2C%22builderList%22%3A%22cbl_m_List%22%2C%22builder%22%3A%22m_value_equal%22%2C%22value%22%3A%220%22%2C%22value_display%22%3A%22%E5%90%A6%22%7D%2C%7B%22name%22%3A%22CJXZ%22%2C%22linkOpt%22%3A%22AND%22%2C%22builder%22%3A%22m_value_equal%22%2C%22value%22%3A%220%2C4%2C5%2C9%22%7D%2C%7B%22name%22%3A%22XNXQDM%22%2C%22value%22%3A%222025-2026-1%2C2025-2026-2%22%2C%22linkOpt%22%3A%22and%22%2C%22builder%22%3A%22m_value_equal%22%7D%5D&*order=-XNXQDM%2C%2BKCH%2C%2BKCXZ'
+
+# ============ 凭证（请填入你自己的，勿提交）============
+credentials:
+  # F12 -> 网络 -> 任一请求 -> 请求头 -> Cookie，整行复制。复制后尽快启动脚本并关闭浏览器标签页
+  # （_WEU 令牌会滚动更新，拖太久旧 Cookie 会失效）
+  cookie: "在这里粘贴你的Cookie"
+
+# ============ 通知渠道（可插拔，可同时启用多个）============
+# 把想用的渠道 enabled 设为 true 并填好参数；发现新成绩时会广播给所有启用的渠道。
+notifiers:
+  # Server酱（微信推送）：https://sct.ftqq.com/
+  serverchan:
+    enabled: true
+    send_key: "在这里粘贴你的SendKey"
+
+  # 邮件（SMTP）。以 QQ 邮箱为例（SSL 465）；密码多数邮箱需用「授权码」而非登录密码。
+  email:
+    enabled: false
+    smtp_host: "smtp.qq.com"
+    smtp_port: 465
+    use_ssl: true          # QQ/163 等 465 端口用 SSL
+    use_starttls: false    # Gmail/Outlook 587 端口改为 use_ssl:false + use_starttls:true
+    username: "your@qq.com"
+    password: "在这里粘贴你的邮箱授权码"
+    from_addr: "your@qq.com"      # 留空则用 username
+    to_addrs:                      # 收件人，可多个
+      - "your@qq.com"
+
+# ============ 字段映射 ============
+# 返回行里各字段的键名。默认值适用于南大；其他学校若字段名不同，改这里即可。
+fields:
+  term: XNXQDM          # 学年学期
+  course_no: KCH        # 课程号
+  course_name: KCM      # 课程名
+  score: ZCJ            # 总成绩
+  credit: XF            # 学分
+
+# ============ 运行参数 ============
+poll_interval_minutes: 15      # 轮询间隔（分钟），请合理设置，勿过于频繁
+state_file: grades_seen.json   # 本地基线文件路径
